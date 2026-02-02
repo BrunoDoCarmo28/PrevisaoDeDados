@@ -21,10 +21,13 @@ CAMINHO_CSV = os.path.join(CAMINHO_BASE, "clientes.csv")
 
 try:
     tabela = pd.read_csv(
-        CAMINHO_CSV,
-        sep=";",          # padrão Excel BR
-        encoding="latin1" # evita erro de acentuação
-    )
+    CAMINHO_CSV,
+    sep=";",
+    encoding="latin1",
+    engine="python",
+    on_bad_lines="skip"
+)
+
 except Exception as e:
     st.error("Erro ao carregar o arquivo clientes.csv")
     st.exception(e)
