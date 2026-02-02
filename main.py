@@ -1,70 +1,64 @@
+import streamlit as st
 import pandas as pd
-import LabelEncoder #transforma textos em numeros, ele vem om a instalação scikit-learn
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
 
-#Passo 1: importar base de dados 
-
+# ======================
+# CARREGAR E TREINAR MODELO
+# ======================
 tabela = pd.read_csv("clientes.csv")
-display(tabela)  #lembrando que display só funciona em extensão .ipynb
 
-#Passo 2: tratar e preparar a base de dados para a IA
-#objetivo: prever a coluna score_credito
+# Codificadores
+cod_profissao = LabelEncoder()
+cod_mix = LabelEncoder()
+cod_pagamento = LabelEncoder()
 
-#todas as ias não trabalham com textos, somente números
-
-display(tabela.info()) 
-
-codificador_profissao = LabelEncoder() #recebendo a função pra codificar
-tabela["profissao"] = codificador_profissao.fit_transform(tabela["profissao"]) #tabela recebe ela mesma com o codificador aplicando dentro da coluna
-
-codificador_mix = LabelEncoder()
-tabela["mix"] = codificador_mix.fit_transform(tabela["mix"]) #precisa aplicar um para cada, pois o 1 de uma coluna é diferente do 1 das outras
-
-
-codificador_comportamento_pagamento = LabelEncoder()
-tabela["comportamento_pagamento"] = codificador_comportamento_pagamento.fit_transform(tabela["comportamento_pagamento"])
-
-#TERMOS COMUNS: X é o cara que vai ser usado para prever, o Y é quem é o cara que vai ser previsto. A partir dos dados de X, a IA vai descobrir como chegar # nos status contidos em Y
+tabela["profissao"] = cod_profissao.fit_transform(tabela["profissao"])
+tabela["mix"] = cod_mix.fit_transform(tabela["mix"])
+tabela["comportamento_pagamento"] = cod_pagamento.fit_transform(
+    tabela["comportamento_pagamento"]
+)
 
 y = tabela["score_credito"]
-x = tabela.drop(colums="score_credito", "id_cliente") #id sai pq é inutil, score sai para não virar numero e ser previsto
+x = tabela.drop(columns=["score_credito", "id_cliente"])
 
-# O score sai justamente para que a ia PREVEJA, SEM TER A RESPOSTA
+x_treino, x_teste, y_treino, y_teste = train_test_split(
+    x, y, test_size=0.3
+)
 
-from sklearn.model_selection import train_test_split
+modelo = RandomForestClassifier()
+modelo.fit(x_treino, y_treino)
 
-x_treino, x_teste, y_treino, y_teste = train_test_split(x,y, test_size=0.3)#ficou 30% pra TESTE e 70% para treinar a IA
+# ======================
+# INTERFACE DO USUÁRIO
+# ======================
+st.title("🔮 Previsão de Score de Crédito")
 
+st.write("Preencha os dados do cliente:")
 
-#Passo 3: criar modelo de previsão OU modelo de IA (ruim, ok bom)
-#Modelos mais usados: RandomForest e KNN - Nearest neighbors
+profissao = st.selectbox(
+    "Profissão",
+    cod_profissao.classes_
+)
 
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.neighbors import KNeighborsClassifier
+mix = st.selectbox(
+    "Mix",
+    cod_mix.classes_
+)
 
-modelo_arvore = RandomForestClassifier()
-modelo_knn = KNeighborsClassifier()
+comportamento = st.selectbox(
+    "Comportamento de Pagamento",
+    cod_pagamento.classes_
+)
 
-#PRECISA treinar os modelos antes
+if st.button("Prever score"):
+    novo_cliente = pd.DataFrame([{
+        "profissao": cod_profissao.transform([profissao])[0],
+        "mix": cod_mix.transform([mix])[0],
+        "comportamento_pagamento": cod_pagamento.transform([comportamento])[0]
+    }])
 
-modelo_arvore.fit(x_treino, y_treino)
-modelo_knn.fit(x_treino, y_treino)
+    previsao = modelo.predict(novo_cliente)
 
-#Passo 4 avaliar e escolher o melhor modelo
-
-previsao_arvore = modelo_arvore.predict(x_teste)
-previsao_knn = modelo_knn.predict(x_teste)
-
-
-from sklearn.metrics import accuracy_score #calcular o score de acerto em %
-
-print(accuracy_score(y_teste, previsao_arvore))	
-print(accuracy_score(y_teste, previsao_knn))
-
-
-
-
-
-
-
-
-
+    st.success(f"Score de crédito previsto: **{previsao[0]}**")
