@@ -31,17 +31,20 @@ except Exception as e:
     st.exception(e)
     st.stop()
 
-# Mostrar apenas as 5 primeiras linhas
-st.subheader("📄 Prévia da base")
-tabela_preview = tabela.head()
-st.dataframe(tabela_preview)
-
 # ======================
-# PADRONIZAR TEXTO
+# PADRONIZAR TEXTO (ANTES DE TUDO)
 # ======================
 tabela["profissao"] = tabela["profissao"].str.strip().str.title()
 tabela["mix"] = tabela["mix"].str.strip().str.title()
 tabela["comportamento_pagamento"] = tabela["comportamento_pagamento"].str.strip().str.title()
+
+# ======================
+# MOSTRAR APENAS 5 LINHAS
+# ======================
+tabela_preview = tabela.head()
+
+st.subheader("📄 Prévia da base")
+st.dataframe(tabela_preview)
 
 # ======================
 # TREINAMENTO DO MODELO
@@ -71,17 +74,17 @@ modelo.fit(x_treino, y_treino)
 # ======================
 st.subheader("🧾 Dados do cliente")
 
-# Usar apenas as profissões da prévia (5 primeiras)
-profissoes_preview = sorted(tabela_preview["profissao"].str.strip().str.title().unique())
+# Usar somente profissões da preview (já padronizadas)
+profissoes_preview = sorted(tabela_preview["profissao"].unique())
 
 profissao_escolhida = st.selectbox(
     "Profissão",
     profissoes_preview
 )
 
-# Buscar dados correspondentes NA PRÉVIA
+# Buscar os dados automáticos NA PREVIEW
 dados_cliente = tabela_preview[
-    tabela_preview["profissao"].str.strip().str.title() == profissao_escolhida
+    tabela_preview["profissao"] == profissao_escolhida
 ].iloc[0]
 
 mix_auto = dados_cliente["mix"]
