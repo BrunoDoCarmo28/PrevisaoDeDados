@@ -31,8 +31,10 @@ except Exception as e:
     st.exception(e)
     st.stop()
 
+# Mostrar apenas as 5 primeiras linhas
 st.subheader("📄 Prévia da base")
-st.dataframe(tabela)
+tabela_preview = tabela.head()
+st.dataframe(tabela_preview)
 
 # ======================
 # PADRONIZAR TEXTO
@@ -69,14 +71,18 @@ modelo.fit(x_treino, y_treino)
 # ======================
 st.subheader("🧾 Dados do cliente")
 
-# Selecionar profissão
+# Usar apenas as profissões da prévia (5 primeiras)
+profissoes_preview = sorted(tabela_preview["profissao"].str.strip().str.title().unique())
+
 profissao_escolhida = st.selectbox(
     "Profissão",
-    sorted(tabela["profissao"].unique())
+    profissoes_preview
 )
 
-# Buscar automaticamente os dados correspondentes
-dados_cliente = tabela[tabela["profissao"] == profissao_escolhida].iloc[0]
+# Buscar dados correspondentes NA PRÉVIA
+dados_cliente = tabela_preview[
+    tabela_preview["profissao"].str.strip().str.title() == profissao_escolhida
+].iloc[0]
 
 mix_auto = dados_cliente["mix"]
 pagamento_auto = dados_cliente["comportamento_pagamento"]
