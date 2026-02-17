@@ -13,7 +13,7 @@ st.set_page_config(page_title="Previsão de Score de Crédito", layout="centered
 st.title("🔮 Previsão de Score de Crédito")
 
 # ======================
-# CARREGAR BASE DE DADOS
+# CARREGAR BASE
 # ======================
 CAMINHO_BASE = os.path.dirname(__file__)
 CAMINHO_CSV = os.path.join(CAMINHO_BASE, "clientes.csv")
@@ -32,7 +32,7 @@ except Exception as e:
     st.stop()
 
 # ======================
-# PADRONIZAR TEXTO (ANTES DE TUDO)
+# PADRONIZAR TEXTO
 # ======================
 tabela["profissao"] = tabela["profissao"].str.strip().str.title()
 tabela["mix"] = tabela["mix"].str.strip().str.title()
@@ -41,13 +41,11 @@ tabela["comportamento_pagamento"] = tabela["comportamento_pagamento"].str.strip(
 # ======================
 # MOSTRAR APENAS 5 LINHAS
 # ======================
-tabela_preview = tabela.head()
-
 st.subheader("📄 Prévia da base")
-st.dataframe(tabela_preview)
+st.dataframe(tabela.head())
 
 # ======================
-# TREINAMENTO DO MODELO
+# TREINAMENTO
 # ======================
 cod_profissao = LabelEncoder()
 cod_mix = LabelEncoder()
@@ -70,21 +68,21 @@ modelo = RandomForestClassifier(random_state=42)
 modelo.fit(x_treino, y_treino)
 
 # ======================
-# INTERFACE DO USUÁRIO
+# INTERFACE
 # ======================
 st.subheader("🧾 Dados do cliente")
 
-# Usar somente profissões da preview (já padronizadas)
-profissoes_preview = sorted(tabela_preview["profissao"].unique())
+# 🔥 AQUI ESTÁ A DIFERENÇA:
+# Agora o select pega TODAS as profissões da tabela inteira
 
 profissao_escolhida = st.selectbox(
     "Profissão",
-    profissoes_preview
+    sorted(tabela["profissao"].unique())
 )
 
-# Buscar os dados automáticos NA PREVIEW
-dados_cliente = tabela_preview[
-    tabela_preview["profissao"] == profissao_escolhida
+# Buscar dados da profissão escolhida NA BASE INTEIRA
+dados_cliente = tabela[
+    tabela["profissao"] == profissao_escolhida
 ].iloc[0]
 
 mix_auto = dados_cliente["mix"]
